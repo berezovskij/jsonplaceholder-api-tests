@@ -24,6 +24,9 @@ jobs:
       - name: Install Newman
         run: npm install -g newman
 
+      - name: Install Newman HTML Reporter
+        run: npm install -g newman-reporter-html
+
       - name: List files in current directory
         run: ls -la .github/workflows/
 
@@ -31,4 +34,10 @@ jobs:
         run: ls -la ../../
 
       - name: Run API Tests
-        run: newman run ./tests/JSONPlaceholderTests.postman_collection.json
+        run: newman run ./tests/JSONPlaceholderTests.postman_collection.json -r html --reporter-html-export newman-report.html
+
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: newman-html-report
+          path: newman-report.html
