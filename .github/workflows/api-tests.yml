@@ -24,5 +24,11 @@ jobs:
       - name: Install Newman
         run: npm install -g newman
 
+      - name: List files in current directory
+        run: ls -la .github/workflows/
+
+      - name: List files in root directory
+        run: ls -la ../../
+
       - name: Run API Tests
         run: newman run ../../JSONPlaceholderTests.postman_collection.json
