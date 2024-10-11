@@ -1,15 +1,12 @@
-name: Run API Tests and Generate Allure Report
+name: Generate and Deploy Allure Report
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  test:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,13 +36,18 @@ jobs:
         run: |
           allure generate allure-results --clean --copy-resources -o allure-report
 
+      - name: Adjust Allure Report Paths
+        run: |
+          find allure-report/ -type f -name '*.html' -exec sed -i 's|href="/jsonplaceholder-api-tests/assets/|href="assets/|g' {} +
+          find allure-report/ -type f -name '*.html' -exec sed -i 's|src="/jsonplaceholder-api-tests/assets/|src="assets/|g' {} +
+
+      - name: List Allure Report Contents
+        run: |
+          ls -R allure-report
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.SECRET_1_TEST }}
           publish_dir: ./allure-report
           clean: true
-          force_orphan: true
-
-
-
