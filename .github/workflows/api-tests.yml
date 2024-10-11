@@ -48,16 +48,10 @@ jobs:
           name: allure-report
           path: allure-report
 
-      - name: Checkout gh-pages branch
-        uses: actions/checkout@v2
-        with:
-          ref: gh-pages
-
-      - name: Remove old files from gh-pages
+      - name: Delete gh-pages branch
         run: |
-          git rm -rf .
-          git commit -m "Remove old files"
-          git push origin gh-pages
+          git fetch origin
+          git push origin --delete gh-pages
 
       - name: Deploy Allure Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
