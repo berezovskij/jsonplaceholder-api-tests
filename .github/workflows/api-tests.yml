@@ -50,6 +50,9 @@ jobs:
 
       - name: Delete gh-pages branch
         run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+          git remote set-url origin https://x-access-token:${{ secrets.SECRET_1_TEST }}@github.com/berezovskij/jsonplaceholder-api-tests.git
           git fetch origin
           git push origin --delete gh-pages
 
