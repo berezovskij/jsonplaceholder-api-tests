@@ -1,0 +1,1 @@
+[{"uid":"84563313781aff9","name":"Posts amount are more than 0","time":{"start":1728665295113,"stop":1728665295259,"duration":146},"status":"passed","severity":"normal"},{"uid":"544414d83e70fc67","name":"Status code is 200","time":{"start":1728665295113,"stop":1728665295259,"duration":146},"status":"passed","severity":"normal"}]
