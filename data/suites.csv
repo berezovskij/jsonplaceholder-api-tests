@@ -1,3 +1,3 @@
 "DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"","146","Posts amount are more than 0","","Fri Oct 11 16:48:15 UTC 2024","passed","Fri Oct 11 16:48:15 UTC 2024","","posts","Posts",""
-"","146","Status code is 200","","Fri Oct 11 16:48:15 UTC 2024","passed","Fri Oct 11 16:48:15 UTC 2024","","posts","Posts",""
+"","109","Status code is 200","","Fri Oct 11 16:54:27 UTC 2024","passed","Fri Oct 11 16:54:27 UTC 2024","","posts","Posts",""
+"","109","Posts amount are more than 0","","Fri Oct 11 16:54:27 UTC 2024","passed","Fri Oct 11 16:54:27 UTC 2024","","posts","Posts",""
