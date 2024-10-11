@@ -1,4 +1,4 @@
-name: Run API Tests
+name: Run Tests and Generate Allure Report
 
 on:
   push:
@@ -21,23 +21,23 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Install Newman
-        run: npm install -g newman
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Install Newman HTML Reporter
-        run: npm install -g newman-reporter-html
+      - name: Run tests with Allure
+        run: |
+          npm install -g allure-commandline --save-dev
+          npm test
+          allure generate --clean
 
-      - name: List files in current directory
-        run: ls -la .github/workflows/
-
-      - name: List files in root directory
-        run: ls -la ../../
-
-      - name: Run API Tests
-        run: newman run ./tests/JSONPlaceholderTests.postman_collection.json -r html --reporter-html-export newman-report.html
-
-      - name: Upload HTML Report
+      - name: Upload Allure results as artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: newman-html-report
-          path: newman-report.html
+          name: allure-report
+          path: allure-report
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./allure-report
