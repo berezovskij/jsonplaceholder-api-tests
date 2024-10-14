@@ -60,3 +60,9 @@ jobs:
           publish_branch: gh-pages
           publish_dir: allure-history
 
+      - name: Adjust Allure Report Paths
+        run: |
+          find allure-history/ -type f -name '*.html' -exec sed -i 's|href="/|href="|g' {} +
+          find allure-history/ -type f -name '*.html' -exec sed -i 's|src="/|src="|g' {} +
+
+
