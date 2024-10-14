@@ -7,10 +7,10 @@
 	},
 	"item": [
 		{
-			"name": "posts",
+			"name": "Test name 1",
 			"event": [
 				{
-					"listen": "test",
+					"listen": "test listen??",
 					"script": {
 						"exec": [
 							"pm.test(\"Status code is 200\", function () {",
