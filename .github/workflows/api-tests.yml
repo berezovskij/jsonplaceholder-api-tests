@@ -22,6 +22,7 @@ jobs:
         run: |
           npm install -g newman
           npm install -g allure-commandline --save-dev
+          npm install -g newman-reporter-allure
 
       - name: Run Newman Tests
         run: |
