@@ -27,29 +27,13 @@ jobs:
         run: |
           newman run ./tests/JSONPlaceholderTests.postman_collection.json -r junit --reporter-junit-export results.xml
 
-      - name: Prepare Allure Results
-        run: |
-          mkdir -p allure-results
-          mv results.xml allure-results/
-
-      - name: Generate Allure Report
-        run: |
-          allure generate allure-results --clean --copy-resources -o allure-report
-
-      - name: Load Test Report History
+      - name: Load test report history
         uses: actions/checkout@v3
+        if: always()
         continue-on-error: true
         with:
           ref: gh-pages
-          path: allure-history
-          persist-credentials: false
-          fetch-depth: 1
-          sparse-checkout: |
-            *
-
-      - name: Remove .git Directory
-        run: |
-          rm -rf allure-history/.git
+          path: gh-pages
 
       - name: Build test report
         uses: simple-elf/allure-report-action@v1.7
@@ -66,12 +50,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
-
-      - name: Adjust Allure Report Paths
-        run: |
-          find allure-history/ -type f -name '*.html' -exec sed -i 's|href="/|href="|g' {} +
-          find allure-history/ -type f -name '*.html' -exec sed -i 's|src="/|src="|g' {} +
-
-
-
-
