@@ -27,6 +27,11 @@ jobs:
         run: |
           newman run ./tests/JSONPlaceholderTests.postman_collection.json -r junit --reporter-junit-export results.xml
 
+      - name: Prepare Allure Results
+        run: |
+          mkdir -p allure-results
+          mv results.xml allure-results/
+
       - name: Load test report history
         uses: actions/checkout@v3
         if: always()
