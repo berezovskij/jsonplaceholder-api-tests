@@ -36,18 +36,27 @@ jobs:
         run: |
           allure generate allure-results --clean --copy-resources -o allure-report
 
-      - name: Adjust Allure Report Paths
-        run: |
-          find allure-report/ -type f -name '*.html' -exec sed -i 's|href="/jsonplaceholder-api-tests/assets/|href="assets/|g' {} +
-          find allure-report/ -type f -name '*.html' -exec sed -i 's|src="/jsonplaceholder-api-tests/assets/|src="assets/|g' {} +
+      - name: Load test report history
+        uses: actions/checkout@v3
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
 
-      - name: List Allure Report Contents
-        run: |
-          ls -R allure-report
+      - name: Build test report
+        uses: simple-elf/allure-report-action@v1.7
+        if: always()
+        with:
+          gh_pages: gh-pages
+          allure_history: allure-history
+          allure_results: build/allure-results
 
-      - name: Deploy to GitHub Pages
+      - name: Publish test report
         uses: peaceiris/actions-gh-pages@v3
+        if: always()
         with:
           github_token: ${{ secrets.SECRET_1_TEST }}
-          publish_dir: ./allure-report
-          clean: true
+          publish_branch: gh-pages
+          publish_dir: allure-history
+
