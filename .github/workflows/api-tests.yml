@@ -62,7 +62,9 @@ jobs:
 
       - name: Adjust Allure Report Paths
         run: |
+          chmod -R u+w allure-history/
           find allure-history/ -type f -name '*.html' -exec sed -i 's|href="/|href="|g' {} +
           find allure-history/ -type f -name '*.html' -exec sed -i 's|src="/|src="|g' {} +
+
 
 
