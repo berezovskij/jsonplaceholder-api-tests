@@ -35,11 +35,15 @@ jobs:
 
       - name: Load Previous Allure History
         if: always()
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          git clone --single-branch --branch gh-pages https://github.com/${{ github.repository }} gh-pages
-          if [ -d "gh-pages/${{ github.run_number - 1 }}/history" ]; then
+          git clone --single-branch --branch gh-pages https://github.com/${GITHUB_REPOSITORY} gh-pages
+          prev_run_number=$(( GITHUB_RUN_NUMBER - 1 ))
+          if [ -d "gh-pages/${prev_run_number}/history" ]; then
             mkdir -p allure-results/history
-            cp -r gh-pages/${{ github.run_number - 1 }}/history/* allure-results/history/
+            cp -r gh-pages/${prev_run_number}/history/* allure-results/history/
           fi
 
       - name: Generate Allure Report
@@ -54,12 +58,14 @@ jobs:
           ls -la allure-report/widgets/
 
       - name: Prepare Report for Deployment
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
         run: |
-          mkdir -p gh-pages/${{ github.run_number }}
-          rsync -av --delete allure-report/ gh-pages/${{ github.run_number }}/
+          mkdir -p gh-pages/${GITHUB_RUN_NUMBER}
+          rsync -av --delete allure-report/ gh-pages/${GITHUB_RUN_NUMBER}/
           touch gh-pages/.nojekyll
           # Update index.html to redirect to the latest report
-          echo '<meta http-equiv="refresh" content="0; url='${{ github.run_number }}/index.html'">' > gh-pages/index.html
+          echo '<meta http-equiv="refresh" content="0; url='${GITHUB_RUN_NUMBER}/index.html'">' > gh-pages/index.html
 
       - name: Remove Old Reports (Keep Last 10)
         run: |
