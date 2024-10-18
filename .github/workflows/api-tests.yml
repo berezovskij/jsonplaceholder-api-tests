@@ -16,17 +16,17 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '20'  # Updated to Node.js 20
 
       - name: Install Newman and Allure
         run: |
           npm install -g newman
           npm install -g allure-commandline
-          npm install -g newman-reporter-junit
 
       - name: Run Newman Tests
         run: |
-          newman run ./tests/JSONPlaceholderTests.postman_collection.json -r junit --reporter-junit-export allure-results/results.xml
+          newman run ./tests/JSONPlaceholderTests.postman_collection.json \
+            -r junit --reporter-junit-export allure-results/results.xml
 
       - name: Load Previous Allure History
         if: always()
