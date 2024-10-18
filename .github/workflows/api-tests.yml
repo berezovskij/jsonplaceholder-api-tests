@@ -55,7 +55,7 @@ jobs:
 
       - name: Prepare Report for Deployment
         run: |
-          rsync -av --delete allure-report/ gh-pages/
+          rsync -av --delete --exclude='.git' allure-report/ gh-pages/
           touch gh-pages/.nojekyll
 
       - name: List Contents of gh-pages Directory Before Deployment
@@ -70,6 +70,8 @@ jobs:
           publish_branch: gh-pages
           publish_dir: gh-pages
           keep_files: true
+          allow_empty_commit: true
+          exclude_assets: ''
 
       - name: Comment on Commit with Report Link
         uses: actions/github-script@v6
