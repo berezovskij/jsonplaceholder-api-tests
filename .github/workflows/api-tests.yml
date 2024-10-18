@@ -34,12 +34,26 @@ jobs:
           mv results.xml allure-results/
 
       - name: Load test report history
-        uses: actions/checkout@v3
         if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
+        run: |
+          if git ls-remote --exit-code --heads https://github.com/${{ github.repository }}.git gh-pages; then
+            echo "gh-pages branch exists. Cloning for history."
+            git clone --single-branch --branch gh-pages https://github.com/${{ github.repository }} gh-pages
+            rm -f gh-pages/.gitignore
+            prev_run_number=$(( GITHUB_RUN_NUMBER - 1 ))
+            echo "Previous run number: $prev_run_number"
+            if [ -d "gh-pages/${prev_run_number}/history" ]; then
+              echo "Previous history directory exists. Copying history..."
+              mkdir -p allure-results/history
+              cp -r gh-pages/${prev_run_number}/history/* allure-results/history/
+            else
+              echo "No history directory found for previous run."
+            fi
+          else
+            echo "gh-pages branch does not exist. Skipping history load."
+          fi
+        shell: bash
+
 
       - name: Build test report
         uses: simple-elf/allure-report-action@v1.7
