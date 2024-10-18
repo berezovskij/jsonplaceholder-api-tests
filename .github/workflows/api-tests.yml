@@ -37,9 +37,9 @@ jobs:
         if: always()
         run: |
           git clone --single-branch --branch gh-pages https://github.com/${{ github.repository }} gh-pages
-          if [ -d "gh-pages/history" ]; then
+          if [ -d "gh-pages/${{ github.run_number - 1 }}/history" ]; then
             mkdir -p allure-results/history
-            cp -r gh-pages/history/* allure-results/history/
+            cp -r gh-pages/${{ github.run_number - 1 }}/history/* allure-results/history/
           fi
 
       - name: Generate Allure Report
@@ -55,8 +55,16 @@ jobs:
 
       - name: Prepare Report for Deployment
         run: |
-          rsync -av --delete --exclude='.git' allure-report/ gh-pages/
+          mkdir -p gh-pages/${{ github.run_number }}
+          rsync -av --delete allure-report/ gh-pages/${{ github.run_number }}/
           touch gh-pages/.nojekyll
+          # Update index.html to redirect to the latest report
+          echo '<meta http-equiv="refresh" content="0; url='${{ github.run_number }}/index.html'">' > gh-pages/index.html
+
+      - name: Remove Old Reports (Keep Last 10)
+        run: |
+          cd gh-pages
+          ls -d [0-9]*/ | sort -n | head -n -10 | xargs rm -rf || true
 
       - name: List Contents of gh-pages Directory Before Deployment
         run: |
@@ -78,12 +86,13 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const runNumber = process.env.GITHUB_RUN_NUMBER;
             const repositoryOwner = context.repo.owner;
             const repositoryName = context.repo.repo;
-            const reportUrl = `https://${repositoryOwner}.github.io/${repositoryName}/`;
+            const reportUrl = `https://${repositoryOwner}.github.io/${repositoryName}/${runNumber}/`;
             await github.rest.repos.createCommitComment({
               owner: repositoryOwner,
               repo: repositoryName,
               commit_sha: context.sha,
-              body: `✅ Allure Report is available at: ${reportUrl}`
+              body: `✅ Allure Report for build #${runNumber} is available at: ${reportUrl}`
             });
