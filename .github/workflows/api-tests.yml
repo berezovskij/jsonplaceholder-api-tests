@@ -21,38 +21,49 @@ jobs:
       - name: Install Newman and Allure
         run: |
           npm install -g newman
-          npm install -g allure-commandline --save-dev
-          npm install -g newman-reporter-allure
+          npm install -g allure-commandline
+          npm install -g newman-reporter-junit
 
       - name: Run Newman Tests
         run: |
-          newman run ./tests/JSONPlaceholderTests.postman_collection.json -r junit --reporter-junit-export results.xml
+          newman run ./tests/JSONPlaceholderTests.postman_collection.json -r junit --reporter-junit-export allure-results/results.xml
 
-      - name: Prepare Allure Results
+      - name: Load Previous Allure History
+        if: always()
         run: |
-          mkdir -p allure-results
-          mv results.xml allure-results/
+          git clone --single-branch --branch gh-pages https://github.com/${{ github.repository }} gh-pages
+          if [ -d "gh-pages/history" ]; then
+            mkdir -p allure-results/history
+            cp -r gh-pages/history/* allure-results/history/
+          fi
 
-      - name: Load test report history
-        uses: actions/checkout@v3
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
+      - name: Generate Allure Report
+        run: |
+          allure generate allure-results --clean -o allure-report
 
-      - name: Build test report
-        uses: simple-elf/allure-report-action@v1.7
-        if: always()
-        with:
-          gh_pages: gh-pages
-          allure_history: allure-history
-          allure_results: allure-results
+      - name: Prepare Report for Deployment
+        run: |
+          cp -r allure-report/history/ gh-pages/history/
+          cp -r allure-report/* gh-pages/
 
-      - name: Publish test report
+      - name: Publish Allure Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: gh-pages
+
+      - name: Comment on Commit with Report Link
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const repositoryOwner = context.repo.owner;
+            const repositoryName = context.repo.repo;
+            const reportUrl = `https://${repositoryOwner}.github.io/${repositoryName}/`;
+            await github.rest.repos.createCommitComment({
+              owner: repositoryOwner,
+              repo: repositoryName,
+              commit_sha: context.sha,
+              body: `✅ Allure Report is available at: ${reportUrl}`
+            });
