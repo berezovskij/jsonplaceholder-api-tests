@@ -18,53 +18,32 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Install Newman, Allure, and Allure Reporter
+      - name: Install Newman and Allure
         run: |
           npm install -g newman
           npm install -g allure-commandline --save-dev
           npm install -g newman-reporter-allure
 
-      - name: Run Newman Tests with Allure Reporter
+      - name: Run Newman Tests
+        run: |
+          newman run ./tests/JSONPlaceholderTests.postman_collection.json -r junit --reporter-junit-export results.xml
+
+      - name: Prepare Allure Results
         run: |
           mkdir -p allure-results
-          newman run ./tests/JSONPlaceholderTests.postman_collection.json -r allure --reporter-allure-export allure-results/results.xml
-
-      - name: List Contents of allure-results Directory
-        run: |
-          echo "Contents of allure-results directory:"
-          ls -la allure-results/
-
-      - name: Display results.xml
-        run: |
-          echo "Contents of allure-results/results.xml:"
-          cat allure-results/results.xml
+          mv results.xml allure-results/
 
       - name: Load test report history
+        uses: actions/checkout@v3
         if: always()
-        env:
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: |
-          if git ls-remote --exit-code --heads https://github.com/${GITHUB_REPOSITORY}.git gh-pages; then
-            echo "gh-pages branch exists. Cloning for history."
-            git clone --single-branch --branch gh-pages https://github.com/${GITHUB_REPOSITORY} gh-pages
-            rm -f gh-pages/.gitignore
-            prev_run_number=$(( GITHUB_RUN_NUMBER - 1 ))
-            echo "Previous run number: $prev_run_number"
-            if [ -d "gh-pages/${prev_run_number}/history" ]; then
-              echo "Previous history directory exists. Copying history..."
-              mkdir -p allure-results/history
-              cp -r gh-pages/${prev_run_number}/history/* allure-results/history/
-            else
-              echo "No history directory found for previous run."
-            fi
-          else
-            echo "gh-pages branch does not exist. Skipping history load."
-          fi
-        shell: bash
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
 
       - name: Build test report
         uses: simple-elf/allure-report-action@v1.7
+        if: always()
         with:
           gh_pages: gh-pages
           allure_history: allure-history
@@ -72,24 +51,8 @@ jobs:
 
       - name: Publish test report
         uses: peaceiris/actions-gh-pages@v3
+        if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
-          exclude_assets: '.gitignore'
-
-      - name: Comment on Commit with Report Link
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const repositoryOwner = context.repo.owner;
-            const repositoryName = context.repo.repo;
-            const runNumber = context.runNumber;
-            const reportUrl = `https://${repositoryOwner}.github.io/${repositoryName}/`;
-            await github.rest.repos.createCommitComment({
-              owner: repositoryOwner,
-              repo: repositoryName,
-              commit_sha: context.sha,
-              body: `✅ Allure Report is available at: ${reportUrl}`
-            });
