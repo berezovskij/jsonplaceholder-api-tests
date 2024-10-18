@@ -42,12 +42,6 @@ jobs:
           allure_history: allure-history
           allure_results: allure-results
 
-      - name: Prepare report directory
-        run: |
-          mkdir -p gh-pages/${{ github.run_number }}
-          cp -r allure-history/* gh-pages/${{ github.run_number }}/
-          echo '<meta http-equiv="refresh" content="0; url='${{ github.run_number }}/index.html'">' > gh-pages/index.html
-
       - name: Remove old reports (keep last 10)
         run: |
           cd gh-pages
