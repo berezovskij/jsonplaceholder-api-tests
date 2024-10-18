@@ -28,17 +28,38 @@ jobs:
         run: |
           newman run ./tests/JSONPlaceholderTests.postman_collection.json -r allure --reporter-allure-export allure-results
 
-      - name: Load test report history
-        uses: actions/checkout@v3
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Remove .gitignore from gh-pages
-        if: success() || failure()
+      - name: List Contents of allure-results Directory
         run: |
-          rm -f gh-pages/.gitignore
+          echo "Contents of allure-results directory:"
+          ls -la allure-results/
+
+      - name: Display results.xml
+        run: |
+          echo "Contents of allure-results/results.xml:"
+          cat allure-results/results.xml
+
+      - name: Load test report history
+        if: always()
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if git ls-remote --exit-code --heads https://github.com/${GITHUB_REPOSITORY}.git gh-pages; then
+            echo "gh-pages branch exists. Cloning for history."
+            git clone --single-branch --branch gh-pages https://github.com/${GITHUB_REPOSITORY} gh-pages
+            rm -f gh-pages/.gitignore
+            prev_run_number=$(( GITHUB_RUN_NUMBER - 1 ))
+            echo "Previous run number: $prev_run_number"
+            if [ -d "gh-pages/${prev_run_number}/history" ]; then
+              echo "Previous history directory exists. Copying history..."
+              mkdir -p allure-results/history
+              cp -r gh-pages/${prev_run_number}/history/* allure-results/history/
+            else
+              echo "No history directory found for previous run."
+            fi
+          else
+            echo "gh-pages branch does not exist. Skipping history load."
+          fi
         shell: bash
 
       - name: Build test report
