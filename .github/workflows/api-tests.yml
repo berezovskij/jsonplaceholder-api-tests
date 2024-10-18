@@ -26,7 +26,7 @@ jobs:
 
       - name: Run Newman Tests with Allure Reporter
         run: |
-          newman run ./tests/JSONPlaceholderTests.postman_collection.json -r allure --reporter-allure-export allure-results
+          newman run ./tests/JSONPlaceholderTests.postman_collection.json -r allure --reporter-allure-export allure-results/results.xml
 
       - name: List Contents of allure-results Directory
         run: |
