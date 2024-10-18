@@ -16,102 +16,58 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '16'
 
-      - name: Install Newman and Allure
+      - name: Install Newman, Allure, and Allure Reporter
         run: |
           npm install -g newman
-          npm install -g allure-commandline
+          npm install -g allure-commandline --save-dev
+          npm install -g newman-reporter-allure
 
-      - name: Run Newman Tests
+      - name: Run Newman Tests with Allure Reporter
         run: |
-          newman run ./tests/JSONPlaceholderTests.postman_collection.json \
-            -r junit --reporter-junit-export allure-results/results.xml
+          newman run ./tests/JSONPlaceholderTests.postman_collection.json -r allure --reporter-allure-export allure-results
 
-      - name: List Contents of allure-results Directory
+      - name: Load test report history
+        uses: actions/checkout@v3
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Remove .gitignore from gh-pages
+        if: success() || failure()
         run: |
-          echo "Contents of allure-results directory:"
-          ls -la allure-results/
+          rm -f gh-pages/.gitignore
+        shell: bash
 
-      - name: Display results.xml
-        run: |
-          echo "Contents of allure-results/results.xml:"
-          cat allure-results/results.xml
+      - name: Build test report
+        uses: simple-elf/allure-report-action@v1.7
+        with:
+          gh_pages: gh-pages
+          allure_history: allure-history
+          allure_results: allure-results
 
-      - name: Load Previous Allure History
-        if: always()
-        env:
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: |
-          git clone --single-branch --branch gh-pages https://github.com/${GITHUB_REPOSITORY} gh-pages
-          prev_run_number=$(( GITHUB_RUN_NUMBER - 1 ))
-          echo "Previous run number: $prev_run_number"
-          if [ -d "gh-pages/${prev_run_number}/history" ]; then
-            echo "Previous history directory exists. Copying history..."
-            mkdir -p allure-results/history
-            cp -r gh-pages/${prev_run_number}/history/* allure-results/history/
-          else
-            echo "No history directory found for previous run."
-          fi
-
-      - name: Generate Allure Report
-        run: |
-          allure generate allure-results --clean -o allure-report --relative-base-url || { echo 'Allure report generation failed'; exit 1; }
-
-      - name: List Contents of allure-report Directory
-        run: |
-          echo "Contents of allure-report directory:"
-          ls -la allure-report/
-          echo "Contents of allure-report/widgets directory:"
-          ls -la allure-report/widgets/
-
-      - name: Prepare Report for Deployment
-        env:
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-        run: |
-          mkdir -p gh-pages/${GITHUB_RUN_NUMBER}
-          rsync -av --delete allure-report/ gh-pages/${GITHUB_RUN_NUMBER}/
-          touch gh-pages/.nojekyll
-          # Update index.html to redirect to the latest report
-          echo '<meta http-equiv="refresh" content="0; url='${GITHUB_RUN_NUMBER}/index.html'">' > gh-pages/index.html
-          echo "Contents of gh-pages/${GITHUB_RUN_NUMBER}/:"
-          ls -la gh-pages/${GITHUB_RUN_NUMBER}/
-          echo "Contents of gh-pages/${GITHUB_RUN_NUMBER}/widgets:"
-          ls -la gh-pages/${GITHUB_RUN_NUMBER}/widgets/
-
-      - name: Remove Old Reports (Keep Last 10)
-        run: |
-          cd gh-pages
-          ls -d [0-9]*/ | sort -n | head -n -10 | xargs rm -rf || true
-
-      - name: List Contents of gh-pages Directory Before Deployment
-        run: |
-          echo "Contents of gh-pages directory:"
-          ls -la gh-pages/
-
-      - name: Publish Allure Report to GitHub Pages
+      - name: Publish test report
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: gh-pages
-          keep_files: true
-          allow_empty_commit: true
-          exclude_assets: ''
+          publish_dir: allure-history
+          exclude_assets: '.gitignore'
 
       - name: Comment on Commit with Report Link
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const runNumber = process.env.GITHUB_RUN_NUMBER;
             const repositoryOwner = context.repo.owner;
             const repositoryName = context.repo.repo;
-            const reportUrl = `https://${repositoryOwner}.github.io/${repositoryName}/${runNumber}/`;
+            const runNumber = context.runNumber;
+            const reportUrl = `https://${repositoryOwner}.github.io/${repositoryName}/`;
             await github.rest.repos.createCommitComment({
               owner: repositoryOwner,
               repo: repositoryName,
               commit_sha: context.sha,
-              body: `✅ Allure Report for build #${runNumber} is available at: ${reportUrl}`
+              body: `✅ Allure Report is available at: ${reportUrl}`
             });
