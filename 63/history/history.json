@@ -1,0 +1,1 @@
+{"45e8e06514cafccba38250400690d8d4:08b8bca71523ce0360097703f173bd08":{"statistic":{"failed":0,"broken":0,"skipped":0,"passed":1,"unknown":0,"total":1},"items":[{"uid":"e2228076e679e0f1","reportUrl":"https://berezovskij.github.io/jsonplaceholder-api-tests/62//#testresult/e2228076e679e0f1","status":"passed","time":{"start":1729266838250,"stop":1729266838412,"duration":162}}]}}
