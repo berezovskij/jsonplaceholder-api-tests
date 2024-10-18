@@ -8,9 +8,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: 'Allure Report'
-      
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -44,13 +42,34 @@ jobs:
           allure_history: allure-history
           allure_results: allure-results
 
-      - name: Deploy Allure Report to GitHub Pages
+      - name: Prepare report directory
+        run: |
+          mkdir -p gh-pages/${{ github.run_number }}
+          cp -r allure-history/* gh-pages/${{ github.run_number }}/
+          echo '<meta http-equiv="refresh" content="0; url='${{ github.run_number }}/index.html'">' > gh-pages/index.html
+
+      - name: Remove old reports (keep last 10)
+        run: |
+          cd gh-pages
+          ls -d [0-9]*/ | sort -n | head -n -10 | xargs rm -rf
+
+      - name: Publish test report
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-report
-          allow_empty_commit: true
+          publish_dir: gh-pages
+          destination_dir: .
           keep_files: true
-        env:
-          GITHUB_ENVIRONMENT: 'Allure Report'
+
+      - name: Comment on Commit with Report Link
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: '✅ Allure Report for build #${{ github.run_number }}: https://${{ github.repository_owner }}.github.io/${{ github.repository }}/${{ github.run_number }}/'
+            })
