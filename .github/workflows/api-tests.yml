@@ -61,15 +61,20 @@ jobs:
           publish_dir: gh-pages
           destination_dir: .
           keep_files: true
-
+          
       - name: Comment on Commit with Report Link
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            github.repos.createCommitComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+            const runNumber = process.env.GITHUB_RUN_NUMBER;
+            const repositoryOwner = context.repo.owner;
+            const repositoryName = context.repo.repo;
+            const reportUrl = `https://${repositoryOwner}.github.io/${repositoryName}/${runNumber}/`;
+            await github.rest.repos.createCommitComment({
+              owner: repositoryOwner,
+              repo: repositoryName,
               commit_sha: context.sha,
-              body: '✅ Allure Report for build #${{ github.run_number }}: https://${{ github.repository_owner }}.github.io/${{ github.repository }}/${{ github.run_number }}/'
-            })
+              body: `✅ Allure Report for build #${runNumber}: ${reportUrl}`
+            });
+        
