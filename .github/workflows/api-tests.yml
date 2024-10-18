@@ -70,3 +70,19 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
+
+      - name: Comment on Commit with Report Link
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const runNumber = process.env.GITHUB_RUN_NUMBER;
+            const repositoryOwner = context.repo.owner;
+            const repositoryName = context.repo.repo;
+            const reportUrl = `https://${repositoryOwner}.github.io/${repositoryName}/${runNumber}/`;
+            await github.rest.repos.createCommitComment({
+              owner: repositoryOwner,
+              repo: repositoryName,
+              commit_sha: context.sha,
+              body: `✅ Allure Report for build #${runNumber} is available at: ${reportUrl}`
+            });
