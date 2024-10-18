@@ -33,6 +33,11 @@ jobs:
           echo "Contents of allure-results directory:"
           ls -la allure-results/
 
+      - name: Display results.xml
+        run: |
+          echo "Contents of allure-results/results.xml:"
+          cat allure-results/results.xml
+
       - name: Load Previous Allure History
         if: always()
         env:
@@ -41,9 +46,13 @@ jobs:
         run: |
           git clone --single-branch --branch gh-pages https://github.com/${GITHUB_REPOSITORY} gh-pages
           prev_run_number=$(( GITHUB_RUN_NUMBER - 1 ))
+          echo "Previous run number: $prev_run_number"
           if [ -d "gh-pages/${prev_run_number}/history" ]; then
+            echo "Previous history directory exists. Copying history..."
             mkdir -p allure-results/history
             cp -r gh-pages/${prev_run_number}/history/* allure-results/history/
+          else
+            echo "No history directory found for previous run."
           fi
 
       - name: Generate Allure Report
@@ -66,6 +75,10 @@ jobs:
           touch gh-pages/.nojekyll
           # Update index.html to redirect to the latest report
           echo '<meta http-equiv="refresh" content="0; url='${GITHUB_RUN_NUMBER}/index.html'">' > gh-pages/index.html
+          echo "Contents of gh-pages/${GITHUB_RUN_NUMBER}/:"
+          ls -la gh-pages/${GITHUB_RUN_NUMBER}/
+          echo "Contents of gh-pages/${GITHUB_RUN_NUMBER}/widgets:"
+          ls -la gh-pages/${GITHUB_RUN_NUMBER}/widgets/
 
       - name: Remove Old Reports (Keep Last 10)
         run: |
