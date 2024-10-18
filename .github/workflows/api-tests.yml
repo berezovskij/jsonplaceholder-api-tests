@@ -23,16 +23,11 @@ jobs:
           npm install -g newman
           npm install -g allure-commandline --save-dev
           npm install -g newman-reporter-allure
-
+      
       - name: Run Newman Tests with Allure Reporter
         run: |
           mkdir -p allure-results
           newman run ./tests/JSONPlaceholderTests.postman_collection.json -r allure --reporter-allure-export allure-results
-
-      - name: Prepare Allure Results
-        run: |
-          mkdir -p allure-results
-          mv results.xml allure-results/
 
       - name: Load test report history
         if: always()
