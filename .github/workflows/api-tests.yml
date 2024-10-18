@@ -55,8 +55,8 @@ jobs:
 
       - name: Prepare Report for Deployment
         run: |
-          cp -r allure-report/history/ gh-pages/history/
-          cp -r allure-report/* gh-pages/
+          rsync -av --delete allure-report/ gh-pages/
+          touch gh-pages/.nojekyll
 
       - name: List Contents of gh-pages Directory Before Deployment
         run: |
@@ -69,6 +69,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: gh-pages
+          keep_files: true
 
       - name: Comment on Commit with Report Link
         uses: actions/github-script@v6
